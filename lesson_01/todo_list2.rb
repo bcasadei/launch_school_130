@@ -66,18 +66,21 @@ class TodoList
   end
 
   def item_at(idx)
-    raise IndexError if idx > @todos.length
-    @todos[idx]
+    @todos.fetch(idx)
   end
 
   def mark_done_at(idx)
-    raise IndexError if idx > @todos.length
-    @todos[idx].done!
+    item_at(idx).done!
   end
 
   def mark_undone_at(idx)
-    raise IndexError if idx > @todos.length
-    @todos[idx].undone!
+    item_at(idx).undone!
+  end
+
+  def done!
+    @todos.each_index do |idx|
+      mark_done_at(idx)
+    end
   end
 
   def done?
@@ -93,8 +96,7 @@ class TodoList
   end
 
   def remove_at(idx)
-    raise IndexError if idx > @todos.length
-    @todos.delete_at(idx)
+    @todos.delete(item_at(idx))
   end
 
   def to_s
@@ -104,6 +106,39 @@ class TodoList
 
   def each
     @todos.each { |obj| yield(obj) }
+    self
+  end
+
+  def select
+    list = TodoList.new(title)
+    each do |obj| 
+      list.add(obj) if yield(obj)
+    end
+    list
+  end
+
+  def find_by_title(str)
+    @todos.select { |todo| todo.title == str }.first
+  end
+
+  def all_done
+    @todos.select { |todo| todo.done? }
+  end
+
+  def all_not_done
+    @todos.select { |todo| todo.done? == false }
+  end
+
+  def mark_done(str)
+    find_by_title(title) && find_by_title(title).done!
+  end
+
+  def mark_all_done
+    @todos.each { |todo| todo.done! }
+  end
+
+  def mark_all_undone
+    @todos.each { |todo| todo.undone! }
   end
 end
 
@@ -111,6 +146,7 @@ end
 todo1 = Todo.new("Buy milk")
 todo2 = Todo.new("Clean room")
 todo3 = Todo.new("Go to gym")
+todo4 = Todo.new("Buy milk")
 list = TodoList.new("Today's Todos")
 
 # ---- Adding to the list -----
@@ -119,6 +155,7 @@ list = TodoList.new("Today's Todos")
 list.add(todo1)               # adds todo1 to end of list, returns list
 list.add(todo2)                 # adds todo2 to end of list, returns list
 list.add(todo3)                 # adds todo3 to end of list, returns list
+list.add(todo4)
 # list.add(1)                     # raises TypeError with message "Can only add Todo objects"
 
 # <<
@@ -147,6 +184,7 @@ list.add(todo3)                 # adds todo3 to end of list, returns list
 # mark_done_at
 # list.mark_done_at               # raises ArgumentError
 # list.mark_done_at(1)            # marks the 2nd item as done
+# list.mark_done_at(0) 
 # list.mark_done_at(100)          # raises IndexError
 
 # # mark_undone_at
@@ -185,8 +223,27 @@ list.add(todo3)                 # adds todo3 to end of list, returns list
 # [ ] Go to gym
 
 # ---- each method ----
-list.each do |todo|
-  puts todo                   # calls Todo#to_s
-end
+# results = list.each do |todo|
+#   puts todo                   # calls Todo#to_s
+# end
+# puts results.inspect
 
+# ---- select method ----
+# results = list.select { |todo| todo.done? }
+# puts results.inspect
+
+# p list.find_by_title("Buy")
+
+# p list.all_done
+
+# p list.all_not_done
+
+list.mark_done("Buy milk")
+list.to_s
+
+# list.mark_all_done
+# list.to_s
+
+# list.mark_all_undone
+# list.to_s
 
